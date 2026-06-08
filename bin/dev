@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# dev — arranca todas las sesiones tmux por proyecto
+# Uso: dev          → crea sesiones y adjunta a precot
+#      dev <nombre> → crea sesiones y adjunta a esa sesión
+
+PROJECTS=(
+  "precot:/Users/carloss/Documents/precotizaciones-main"
+  "sierra:/Users/carloss/Documents/syscom-shopify-sync"
+  "spl:/Users/carloss/Documents/sierra-print-lab-storefront"
+  "int:/Users/carloss/Documents/integradores-sierrastore"
+  "erp:/Users/carloss/Documents/connexum-erp"
+  "hermes:/Users/carloss/Documents/openclaw-sierra"
+)
+
+for entry in "${PROJECTS[@]}"; do
+  name="${entry%%:*}"
+  path="${entry##*:}"
+  if [ -d "$path" ] && ! tmux has-session -t "$name" 2>/dev/null; then
+    tmux new-session -d -s "$name" -c "$path"
+    echo "  $name"
+  fi
+done
+
+TARGET="${1:-precot}"
+
+if [ -n "$TMUX" ]; then
+  tmux switch-client -t "$TARGET" 2>/dev/null || tmux switch-client -t "$(tmux list-sessions -F '#{session_name}' | head -1)"
+else
+  tmux attach -t "$TARGET" 2>/dev/null || tmux attach
+fi

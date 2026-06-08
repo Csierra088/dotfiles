@@ -1,0 +1,81 @@
+# ─── Theme ────────────────────────────────────────────────────────────────────
+theme = Synthwave
+
+# ─── Font ─────────────────────────────────────────────────────────────────────
+font-family = "JetBrainsMono NL Nerd Font"
+font-size = 13
+font-feature = calt
+font-feature = liga
+font-feature = ss01
+font-feature = ss02
+
+# ─── Window ───────────────────────────────────────────────────────────────────
+window-padding-x = 14
+window-padding-y = 12
+window-padding-balance = true
+macos-titlebar-style = tabs
+macos-window-shadow = true
+background-opacity = 1.0
+
+# ─── Splits ───────────────────────────────────────────────────────────────────
+unfocused-split-opacity = 0.75
+
+# ─── Cursor ───────────────────────────────────────────────────────────────────
+cursor-style = bar
+cursor-style-blink = true
+
+# ─── Behavior ─────────────────────────────────────────────────────────────────
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+clipboard-read = allow
+clipboard-write = allow
+focus-follows-mouse = false
+scrollback-limit = 10000
+desktop-notifications = true
+
+# ─── Shell integration ────────────────────────────────────────────────────────
+shell-integration = detect
+shell-integration-features = cursor,sudo,title
+
+# ─── Keybindings ──────────────────────────────────────────────────────────────
+# Cmd+Shift+H → split horizontal, Cmd+Shift+V → split vertical
+keybind = cmd+shift+h=new_split:right
+keybind = cmd+shift+v=new_split:down
+# Cmd+] / Cmd+[ → navegar entre splits
+keybind = cmd+]=goto_split:next
+keybind = cmd+[=goto_split:previous
+# Cmd+W cierra el split/tab actual (no toda la ventana)
+keybind = cmd+w=close_surface
+# Igualar splits desiguales
+keybind = cmd+shift+e=equalize_splits
+# Overview de todas las tabs
+keybind = cmd+shift+o=toggle_tab_overview
+# Recargar config sin reiniciar
+keybind = cmd+shift+r=reload_config
+
+# ─── Tabs ─────────────────────────────────────────────────────────────────────
+# Cmd+T → nueva tab
+keybind = cmd+t=new_tab
+# Cmd+Shift+T → renombrar tab actual
+keybind = cmd+shift+t=prompt_tab_title
+# Cmd+Shift+W → cerrar tab completa
+keybind = cmd+shift+w=close_tab
+# Cmd+1…9 → ir directo a tab por número
+keybind = cmd+1=goto_tab:1
+keybind = cmd+2=goto_tab:2
+keybind = cmd+3=goto_tab:3
+keybind = cmd+4=goto_tab:4
+keybind = cmd+5=goto_tab:5
+keybind = cmd+6=goto_tab:6
+keybind = cmd+7=goto_tab:7
+keybind = cmd+8=goto_tab:8
+keybind = cmd+9=goto_tab:9
+# Cmd+Ctrl+← / → → mover tab de posición
+keybind = cmd+ctrl+left=move_tab:-1
+keybind = cmd+ctrl+right=move_tab:1
+
+# ─── Splits avanzado ──────────────────────────────────────────────────────────
+# Cmd+Enter → zoom del split activo (toggle pantalla completa dentro de la ventana)
+keybind = cmd+enter=toggle_split_zoom
+# Cmd+Shift+P → renombrar el split activo
+keybind = cmd+shift+p=prompt_surface_title

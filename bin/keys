@@ -1,0 +1,73 @@
+#!/usr/bin/env zsh
+# Cheatsheet de atajos — Ghostty + tmux
+
+C='\033[38;2;5;217;232m'    # cyan
+P='\033[38;2;122;4;235m'    # purple
+G='\033[38;2;0;255;159m'    # green
+K='\033[38;2;255;42;109m'   # pink
+D='\033[2m'                  # dim
+B='\033[1m'                  # bold
+R='\033[0m'                  # reset
+
+key()  { printf "  ${C}%-22s${R} ${D}%s${R}\n" "$1" "$2"; }
+head() { printf "\n  ${P}${B}▸ %s${R}\n" "$1"; }
+sep()  { printf "  ${D}%s${R}\n" "──────────────────────────────────────"; }
+
+printf "\n${K}${B}  ⬡  ATAJOS DE TECLADO${R}  ${D}ghostty + tmux${R}\n"
+sep
+
+head "GHOSTTY — Tabs"
+key "Cmd+T"            "Nueva tab"
+key "Cmd+Shift+T"      "Renombrar tab (prompt)"
+key "Cmd+Shift+W"      "Cerrar tab"
+key "Cmd+1 … 9"        "Ir a tab por número"
+key "Cmd+Ctrl+← / →"  "Mover tab de posición"
+key "Cmd+Shift+O"      "Overview de todas las tabs"
+
+head "GHOSTTY — Splits"
+key "Cmd+Shift+H"      "Split horizontal (derecha)"
+key "Cmd+Shift+V"      "Split vertical (abajo)"
+key "Cmd+] / ["        "Navegar entre splits"
+key "Cmd+Enter"        "Zoom del split activo (toggle)"
+key "Cmd+Shift+E"      "Igualar tamaños de splits"
+key "Cmd+Shift+P"      "Renombrar split activo"
+key "Cmd+W"            "Cerrar split actual"
+
+head "GHOSTTY — General"
+key "Cmd+Shift+R"      "Recargar config sin reiniciar"
+key "Cmd+Shift+F"      "Buscar en el buffer"
+key "Cmd++"            "Aumentar tamaño de fuente"
+key "Cmd+-"            "Reducir tamaño de fuente"
+key "Cmd+0"            "Restaurar tamaño de fuente"
+
+sep
+head "TMUX — Sesiones  ${D}(prefix = Ctrl+A)${R}"
+key "Ctrl+A  S"        "Listar y elegir sesión"
+key "Ctrl+A  D"        "Detach (sesión sigue viva)"
+key "Ctrl+A  X"        "Matar sesión actual"
+key "dev"              "Arrancar todas las sesiones"
+key "dev <nombre>"     "Ir directo a una sesión"
+
+head "TMUX — Ventanas"
+key "Ctrl+A  C"        "Nueva ventana"
+key "Ctrl+A  1 … 9"   "Ir a ventana por número"
+key "Ctrl+A  ,"        "Renombrar ventana"
+
+head "TMUX — Splits / Paneles"
+key "Ctrl+A  |"        "Split vertical"
+key "Ctrl+A  -"        "Split horizontal"
+key "Ctrl+A  H/J/K/L"  "Navegar entre paneles (vim)"
+key "Ctrl+A  H/J/K/L"  "Resize paneles (Shift+)"
+key "Ctrl+A  Z"        "Zoom pane activo (toggle)"
+
+head "TMUX — Copy mode"
+key "Ctrl+A  ["        "Entrar a copy mode"
+key "V"                "Iniciar selección (en copy mode)"
+key "Y"                "Copiar al clipboard de macOS"
+key "Q / Esc"          "Salir de copy mode"
+
+head "TMUX — Utilidades"
+key "Ctrl+A  R"        "Recargar config de tmux"
+
+sep
+printf "\n  ${D}tip: corre ${R}${G}keys${R}${D} en cualquier momento para ver esto${R}\n\n"
