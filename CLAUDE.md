@@ -20,6 +20,7 @@ Repo: `Csierra088/dotfiles` — local en `~/dotfiles/`.
 | `fastfetch/ascii.txt` | `~/.config/fastfetch/ascii.txt` | Braille aliencat (KaykCaputo/aliencat-fastfetch) |
 | `bin/dev` | `~/.local/bin/dev` | Arranca sesiones tmux por proyecto |
 | `bin/keys` | `~/.local/bin/keys` | Cheatsheet de atajos Ghostty+tmux en terminal |
+| `zsh/claude-models.zsh` | `source` desde `~/.zshrc` | `alias claude` (skip-permissions) + wrappers `claude-mm`/`claude-ds`/`claude-z`. **API keys SIEMPRE en Keychain, nunca en el repo.** |
 | `zsh/memory-vault.zsh` | `source` desde `~/.zshrc` | Aliases del memory vault: `mem-save`/`mem-cd`/`mem-vault`/`mem-grep`. Requiere clonar `Csierra088/memory-vault` en `~/Documents/memory-vault`. |
 | `install.sh` | — | Instalador macOS/Linux (brew + cp) |
 | `install.ps1` | — | Instalador Windows (winget + PowerShell profile) |
