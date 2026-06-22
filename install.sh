@@ -93,6 +93,8 @@ add_if_missing() {
 add_if_missing 'export PATH="$HOME/.local/bin:$PATH"'
 add_if_missing 'eval "$(starship init zsh)"'
 add_if_missing '[[ -z "$TMUX" ]] && { _last=$(last "$USER" 2>/dev/null | awk '"'"'NR==2 && NF>=8 {printf "%s %s %s  %s", $3, $4, $5, $6}'"'"'); _now=$(date "+%A %d %b  %H:%M"); echo ""; echo "  \033[35m⬡\033[0m  \033[95mbienvenido, $USER\033[0m"; echo "  \033[35m·\033[0m  \033[2msesión actual   \033[0m\033[96m$_now\033[0m"; [[ -n "$_last" ]] && echo "  \033[35m·\033[0m  \033[2múltima sesión   \033[0m\033[35m$_last\033[0m"; echo ""; fastfetch; }'
+# Memory vault: aliases mem-save/mem-cd/mem-vault/mem-grep (requiere clonar Csierra088/memory-vault en ~/Documents/memory-vault)
+add_if_missing '[ -f "$HOME/dotfiles/zsh/memory-vault.zsh" ] && source "$HOME/dotfiles/zsh/memory-vault.zsh"'
 ok "Shell configurado"
 
 printf "\n${GREEN}  ⬡  Instalación completa.${R} Abre una terminal nueva o corre: source $SHELL_RC\n\n"
