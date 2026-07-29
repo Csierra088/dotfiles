@@ -72,3 +72,54 @@ claude-z() {
   ANTHROPIC_SMALL_FAST_MODEL="glm-4.5-air" \
   ~/.local/bin/claude --dangerously-skip-permissions --model glm-5.2 "$@"
 }
+
+# Kimi (Moonshot AI) via Claude Code CLI — configuración OFICIAL de Moonshot
+# (https://platform.moonshot.ai/docs/guide/claude-code-kimi, consultada 29-jul-2026).
+# Guarda la key UNA vez:  security add-generic-password -a "$USER" -s moonshot_api_key -w
+# Uso:  claude-kimi                                  → kimi-k3, ventana 1M (default)
+#       KIMI_MODEL=kimi-k2.7-code-highspeed claude-kimi  → variante rápida, ventana 256K
+#       KIMI_MODEL=kimi-k2.6 claude-kimi                 → thinking opcional (K3 y K2.7 lo exigen)
+#
+# Notas del proveedor (no inventadas, están en la doc oficial):
+#  - El sufijo `[1m]` aquí es de Moonshot (`kimi-k3[1m]`), NO el truco del id Anthropic que falló
+#    con DeepSeek: `kimi-k3` no es un id que el CLI reconozca como Anthropic, así que respeta
+#    ANTHROPIC_BASE_URL y sí rutea a Moonshot. Verificar con `/status` dentro de la sesión.
+#  - ENABLE_TOOL_SEARCH debe ir en "false": el endpoint de Kimi todavía no soporta Tool Search y
+#    los tool calls se rompen si queda encendido.
+#  - CLAUDE_CODE_AUTO_COMPACT_WINDOW debe coincidir con la ventana real del modelo.
+#  - kimi-k3 y kimi-k2.7-code exigen thinking ENCENDIDO (Tab en el REPL); si no, la API rechaza
+#    con `invalid thinking: only type=enabled is allowed for this model`. WebFetch no está
+#    soportado por el endpoint.
+claude-kimi() {
+  local key model window
+  key=$(security find-generic-password -a "$USER" -s moonshot_api_key -w 2>/dev/null)
+  if [[ -z "$key" ]]; then
+    echo "Falta la key de Moonshot/Kimi. Consíguela en https://platform.kimi.ai/console/api-keys"
+    echo "y guárdala una vez (el prompt oculta lo que pegues):"
+    echo '  security add-generic-password -a "$USER" -s moonshot_api_key -w'
+    return 1
+  fi
+  model="${KIMI_MODEL:-kimi-k3[1m]}"
+  case "$model" in
+    kimi-k3*)            window=1048576 ;;  # 1M
+    kimi-k2.7-code*)     window=262144  ;;  # 256K
+    *)                   window=262144  ;;
+  esac
+  ANTHROPIC_BASE_URL="https://api.moonshot.ai/anthropic" \
+  ANTHROPIC_AUTH_TOKEN="$key" \
+  ANTHROPIC_API_KEY="$key" \
+  ANTHROPIC_MODEL="$model" \
+  ANTHROPIC_SMALL_FAST_MODEL="$model" \
+  ANTHROPIC_DEFAULT_OPUS_MODEL="$model" \
+  ANTHROPIC_DEFAULT_SONNET_MODEL="$model" \
+  ANTHROPIC_DEFAULT_HAIKU_MODEL="$model" \
+  ANTHROPIC_DEFAULT_FABLE_MODEL="$model" \
+  CLAUDE_CODE_SUBAGENT_MODEL="$model" \
+  ENABLE_TOOL_SEARCH="false" \
+  CLAUDE_CODE_AUTO_COMPACT_WINDOW="$window" \
+  CLAUDE_CODE_EFFORT_LEVEL="max" \
+  ~/.local/bin/claude --dangerously-skip-permissions --model "$model" "$@"
+}
+
+# Atajo corto, mismo comportamiento que claude-kimi.
+alias claude-k='claude-kimi'
