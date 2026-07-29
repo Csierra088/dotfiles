@@ -73,41 +73,83 @@ claude-z() {
   ~/.local/bin/claude --dangerously-skip-permissions --model glm-5.2 "$@"
 }
 
-# Kimi (Moonshot AI) via Claude Code CLI — configuración OFICIAL de Moonshot
-# (https://platform.moonshot.ai/docs/guide/claude-code-kimi, consultada 29-jul-2026).
-# Guarda la key UNA vez:  security add-generic-password -a "$USER" -s moonshot_api_key -w
-# Uso:  claude-kimi                                  → kimi-k3, ventana 1M (default)
-#       KIMI_MODEL=kimi-k2.7-code-highspeed claude-kimi  → variante rápida, ventana 256K
-#       KIMI_MODEL=kimi-k2.6 claude-kimi                 → thinking opcional (K3 y K2.7 lo exigen)
+# Kimi Code (suscripción Kimi, NO la API de pago por token) via Claude Code CLI.
+# Doc oficial del producto: https://www.kimi.com/code/docs/en/third-party-tools/claude-code.html
+# Verificado empíricamente el 29-jul-2026: HTTP 200 y respuesta real de Kimi en los 4 modelos.
 #
-# Notas del proveedor (no inventadas, están en la doc oficial):
-#  - El sufijo `[1m]` aquí es de Moonshot (`kimi-k3[1m]`), NO el truco del id Anthropic que falló
-#    con DeepSeek: `kimi-k3` no es un id que el CLI reconozca como Anthropic, así que respeta
-#    ANTHROPIC_BASE_URL y sí rutea a Moonshot. Verificar con `/status` dentro de la sesión.
-#  - ENABLE_TOOL_SEARCH debe ir en "false": el endpoint de Kimi todavía no soporta Tool Search y
-#    los tool calls se rompen si queda encendido.
-#  - CLAUDE_CODE_AUTO_COMPACT_WINDOW debe coincidir con la ventana real del modelo.
-#  - kimi-k3 y kimi-k2.7-code exigen thinking ENCENDIDO (Tab en el REPL); si no, la API rechaza
-#    con `invalid thinking: only type=enabled is allowed for this model`. WebFetch no está
-#    soportado por el endpoint.
+# ⚠️ OJO CON EL ENDPOINT — hay DOS productos distintos de Moonshot y NO comparten credenciales:
+#   1. Kimi API Platform (platform.moonshot.ai) → base `https://api.moonshot.ai/anthropic`,
+#      pago por token, keys de platform.kimi.ai/console/api-keys.
+#   2. Kimi Code / "KFC" (www.kimi.com/code/console) → base `https://api.kimi.com/coding/`,
+#      incluido en la SUSCRIPCIÓN, keys con prefijo `sk-kimi-`.  ← ESTE es el de Carlos.
+# Una key del producto 2 contra el endpoint del producto 1 da `401 Invalid Authentication`
+# (probado). Si algún día da 401, lo primero que hay que revisar es de qué consola salió la key.
+#
+# Guarda la key UNA vez:  security add-generic-password -a "$USER" -s moonshot_api_key -U -w
+# Uso:  claude-kimi                              → k3 con ventana 1M (default)
+#       KIMI_MODEL=k3-256k     claude-kimi       → K3 con 256K, para tareas chicas
+#       KIMI_MODEL=k2.7-code   claude-kimi       → K2.7 Code, 256K
+#       KIMI_MODEL=kimi-for-coding claude-kimi   → modelo del plan Andante, 256K
+#
+# Notas del proveedor:
+#  - El `[1m]` de `k3[1m]` es convención de Kimi Code para pedir la ventana de 1M y SOLO aplica a
+#    las env vars del CLI (en llamadas directas a la API el id es `k3` pelón). No confundir con el
+#    truco del id Anthropic que falló con DeepSeek: `k3` no es un id que el CLI reconozca como
+#    Anthropic, así que respeta ANTHROPIC_BASE_URL.
+#  - Verificar dentro de la sesión con `/status`: el Base URL debe decir `api.kimi.com/coding/`.
+#    NO confiar en preguntarle al modelo "¿qué modelo eres?": el system prompt de Claude Code le
+#    dice que es Claude, así que CUALQUIER modelo detrás contesta "soy Claude". Es prueba nula.
+#  - Thinking DEBE ir encendido para usar K3 / K2.7: apagarlo rutea silenciosamente a K2.6.
+#    Cambiar esfuerzo en caliente con `/effort` (K3 soporta low/high/max).
+#  - Si los tool calls se portan raro, probar con `ENABLE_TOOL_SEARCH=false`: la doc de la otra
+#    plataforma dice que su endpoint aún no soporta Tool Search. La doc de Kimi Code no lo pide,
+#    por eso no va activado aquí (probado: NO era la causa del 401 de abajo).
+#
+# ⚠️ DOS GOTCHAS QUE COSTARON DEBUGGEO (29-jul-2026, ambos aislados empíricamente):
+#
+#  1. CLAUDE_CONFIG_DIR PROPIO — OBLIGATORIO. Con el config dir default (`~/.claude`) y la sesión
+#     de Claude logueada, el CLI usa las credenciales OAuth de Anthropic e IGNORA
+#     ANTHROPIC_AUTH_TOKEN → las manda al endpoint de Kimi → `401 The API Key appears to be
+#     invalid`. Aislado a punta de bisección: copias de `~/.claude.json`, `settings.json`,
+#     `settings.local.json`, `plugins`, `agents`, `skills`, `commands`, `hooks` y `CLAUDE.md`
+#     dentro de un CLAUDE_CONFIG_DIR alterno funcionan TODAS; el único factor que rompe es usar
+#     el config dir default. Es el mismo fenómeno de [[claude-ds]]: sesión logueada gana.
+#     Por eso este wrapper usa `~/.claude-kimi/` con symlinks a los assets reales (mismos skills,
+#     plugins, agentes, CLAUDE.md y settings; historial de proyectos compartido vía .claude.json).
+#
+#  2. NO pasar `--model` en la línea de comandos. El flag manda el id LITERAL y Kimi rechaza
+#     `k3[1m]` con `401 ... Your model id does not exist, recognized as other:k3[1m]`. Vía la env
+#     var ANTHROPIC_MODEL el CLI sí interpreta el `[1m]` y manda `k3` limpio. Ojo: Kimi devuelve
+#     401 (no 400) para ids de modelo inválidos, así que un "401" aquí NO siempre es la key.
+#     ANTHROPIC_MODEL gana sobre el `"model"` de settings.json — verificado.
 claude-kimi() {
-  local key model window
+  local key model window cfg
   key=$(security find-generic-password -a "$USER" -s moonshot_api_key -w 2>/dev/null)
   if [[ -z "$key" ]]; then
-    echo "Falta la key de Moonshot/Kimi. Consíguela en https://platform.kimi.ai/console/api-keys"
+    echo "Falta la key de Kimi Code. Créala en https://www.kimi.com/code/console"
     echo "y guárdala una vez (el prompt oculta lo que pegues):"
-    echo '  security add-generic-password -a "$USER" -s moonshot_api_key -w'
+    echo '  security add-generic-password -a "$USER" -s moonshot_api_key -U -w'
     return 1
   fi
-  model="${KIMI_MODEL:-kimi-k3[1m]}"
+
+  # Config dir propio, idempotente: symlinks a los assets reales para no duplicar nada.
+  cfg="$HOME/.claude-kimi"
+  mkdir -p "$cfg"
+  ln -sfn "$HOME/.claude.json" "$cfg/.claude.json"
+  local asset
+  for asset in settings.json settings.local.json plugins agents skills commands hooks CLAUDE.md; do
+    [[ -e "$HOME/.claude/$asset" ]] && ln -sfn "$HOME/.claude/$asset" "$cfg/$asset"
+  done
+
+  model="${KIMI_MODEL:-k3[1m]}"
   case "$model" in
-    kimi-k3*)            window=1048576 ;;  # 1M
-    kimi-k2.7-code*)     window=262144  ;;  # 256K
-    *)                   window=262144  ;;
+    *\[1m\]) window=1048576 ;;  # 1M
+    *)       window=262144  ;;  # 256K — k3-256k, k2.7-code, kimi-for-coding
   esac
-  ANTHROPIC_BASE_URL="https://api.moonshot.ai/anthropic" \
-  ANTHROPIC_AUTH_TOKEN="$key" \
+  CLAUDE_CONFIG_DIR="$cfg" \
+  ANTHROPIC_BASE_URL="https://api.kimi.com/coding/" \
   ANTHROPIC_API_KEY="$key" \
+  ANTHROPIC_AUTH_TOKEN="$key" \
   ANTHROPIC_MODEL="$model" \
   ANTHROPIC_SMALL_FAST_MODEL="$model" \
   ANTHROPIC_DEFAULT_OPUS_MODEL="$model" \
@@ -115,10 +157,10 @@ claude-kimi() {
   ANTHROPIC_DEFAULT_HAIKU_MODEL="$model" \
   ANTHROPIC_DEFAULT_FABLE_MODEL="$model" \
   CLAUDE_CODE_SUBAGENT_MODEL="$model" \
-  ENABLE_TOOL_SEARCH="false" \
   CLAUDE_CODE_AUTO_COMPACT_WINDOW="$window" \
-  CLAUDE_CODE_EFFORT_LEVEL="max" \
-  ~/.local/bin/claude --dangerously-skip-permissions --model "$model" "$@"
+  CLAUDE_CODE_MAX_CONTEXT_TOKENS="$window" \
+  CLAUDE_CODE_EFFORT_LEVEL="high" \
+  ~/.local/bin/claude --dangerously-skip-permissions "$@"
 }
 
 # Atajo corto, mismo comportamiento que claude-kimi.
